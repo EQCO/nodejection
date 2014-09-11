@@ -1,0 +1,27 @@
+{
+  "name": "nodejection",
+  "version": "0.0.0",
+  "description": "angular-style node dependency injection",
+  "main": "index.js",
+  "scripts": {
+    "test": "node .\\node_modules\\mocha\\bin\\mocha tests.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EQCO/nodejection.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EQCO/nodejection/issues"
+  },
+  "homepage": "https://github.com/EQCO/nodejection",
+  "dependencies": {
+    "lodash": "^2.4.1",
+    "q": "^1.0.1"
+  },
+  "devDependencies": {
+    "mocha": "^1.21.4",
+    "should": "^4.0.4"
+  }
+}

@@ -136,25 +136,33 @@ describe('nodejection', function () {
     });
 
     it('should handle errors', function (done) {
-      nodejection.inject('errorFunction').fail(function (obj) {
+      nodejection.inject('errorFunction').fail(function () {
         done();
       });
     });
 
     it('should handle nested errors', function (done) {
-      nodejection.inject('nestedErrorFunction').fail(function (obj) {
+      nodejection.inject('nestedErrorFunction').fail(function () {
         done();
       });
     });
 
     it('should handle circular dependencies', function (done) {
-      nodejection.inject('circularFunction').fail(function (obj) {
+      nodejection.inject('circularFunction').fail(function () {
         done();
       });
     });
 
     it('should handle nested circular dependencies', function (done) {
-      nodejection.inject('circularNestedStartFunction').fail(function (obj) {
+      nodejection.inject('circularNestedStartFunction').fail(function () {
+        done();
+      });
+    });
+
+    it('should handle onetime injections without registering the dependency', function (done) {
+      nodejection.inject(testData.noRegisterFunction).done(function (obj) {
+        obj.name.should.equal('noRegisterFunction');
+        obj.object.name.should.equal('object');
         done();
       });
     });

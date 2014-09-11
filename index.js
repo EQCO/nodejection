@@ -26,15 +26,30 @@ function register (dependencyName, dependencyPath) {
 }
 
 function resolveFunctionDependency (dependencyFunction, promise, dependencyArguments) {
-  dependencyFunction.apply(undefined, dependencyArguments).done(function (obj) {
-    promise.resolve(obj);
-  }, function () {
+  try {
+    dependencyFunction.apply(undefined, dependencyArguments).done(function (obj) {
+      promise.resolve(obj);
+    }, function () {
+      promise.reject('Error initializing dependency');
+    });
+  } catch (err) {
     promise.reject('Error initializing dependency');
-  });
+  }
 }
 
 function inject (requestedDependency, stack) {
-  var dependency = dependencies[requestedDependency];
+  var dependency;
+
+  if (_.isString(requestedDependency)) {
+    dependency = dependencies[requestedDependency];
+  } else {
+    var deferred = q.defer();
+    dependency = {
+      definition: requestedDependency,
+      deferred: deferred,
+      promise: deferred.promise
+    };
+  }
 
   if (_.isUndefined(dependency)) {
     return q.reject('Requsted dependency doesn\'t exist');

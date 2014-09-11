@@ -15,6 +15,9 @@ module.exports = {
   dependentFunction: ['object', function (object) {
     return q({ name: 'dependentFunction', object: object });
   }],
+  noRegisterFunction: ['object', function (object) {
+    return q({ name: 'noRegisterFunction', object: object });
+  }],
   multiDependentFunction: ['object', 'function', function (object, func) {
     return q({ name: 'multiDependentFunction', object: object, func: func });
   }],
@@ -22,7 +25,7 @@ module.exports = {
     return q({ name: 'nestedDependentFunction', dependentFunction: dependentFunction });
   }],
   errorFunction: function() {
-    return q.reject();
+    throw new Error();
   },
   nestedErrorFunction: ['errorFunction', function (error) {
     return q({ name: 'nestedErrorFunction '});

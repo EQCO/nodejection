@@ -5,7 +5,6 @@ var _ = require('lodash'),
 var dependencies = {};
 
 function register (dependencyName, dependencyPath) {
-  //console.log(arguments);
   if (arguments.length == 2) { 
     if (_.isString(dependencyPath)) { // Dependency is a file, need to require it.
       dependencyPath = require(dependencyPath);
@@ -48,6 +47,11 @@ function inject (requestedDependency, stack) {
 
   if (_.isString(requestedDependency)) {
     dependency = dependencies[requestedDependency];
+
+     if (_.contains(stack, requestedDependency)) {
+       return q.reject('Circular dependency detected on ' + requestedDependency);
+     }
+     stack.push(requestedDependency);
   } else {
     var deferred = q.defer();
     dependency = {
@@ -60,11 +64,6 @@ function inject (requestedDependency, stack) {
   if (_.isUndefined(dependency)) {
     return q.reject('Requsted dependency doesn\'t exist');
   }
-
-  if (_.contains(stack, requestedDependency)) {
-    return q.reject('Circular dependency detected');
-  }
-  stack.push(requestedDependency);
 
   if (dependency.promise.isPending()) {
     if (_.isPlainObject(dependency.definition)) { // Plain objects don't return promises, so just return as is.
@@ -80,12 +79,12 @@ function inject (requestedDependency, stack) {
         }
       } else {
         var promises = _.map(_.initial(dependency.definition), function (dependencyName) {
-          return inject(dependencyName, stack);
+          return inject(dependencyName, _.clone(stack));
         });
 
         q.all(promises).done(function (dependencies) {
           resolveFunctionDependency(_.last(dependency.definition), dependency.deferred, dependencies);
-        }, function () {
+        }, function (err) {
           dependency.deferred.reject('Error initializing dependencies');
         });
       }

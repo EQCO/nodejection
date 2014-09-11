@@ -1,7 +1,7 @@
 'use strict';
 var q = require('q');
 
-module.exports = {
+var functions = {
   object: {
     name: 'object'
   },
@@ -41,5 +41,10 @@ module.exports = {
       name: 'noPromiseFunction',
       object: obj
     };
+  }],
+  parallelFunction: ['object', ['object', function(object) {}], function (object, mdf) {
+    return {};
   }]
 };
+
+module.exports = functions;

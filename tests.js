@@ -159,6 +159,12 @@ describe('nodejection', function () {
       });
     });
 
+    it('should handle parallel dependencies', function (done) {
+      nodejection.inject(testData.parallelFunction).done(function () {
+        done();
+      });
+    });
+
     it('should handle onetime injections without registering the dependency', function (done) {
       nodejection.inject(testData.multiDependentFunction).done(function (obj) {
         obj.name.should.equal('multiDependentFunction');

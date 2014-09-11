@@ -27,11 +27,17 @@ function register (dependencyName, dependencyPath) {
 
 function resolveFunctionDependency (dependencyFunction, promise, dependencyArguments) {
   try {
-    dependencyFunction.apply(undefined, dependencyArguments).done(function (obj) {
-      promise.resolve(obj);
-    }, function () {
-      promise.reject('Error initializing dependency');
-    });
+    var result = dependencyFunction.apply(undefined, dependencyArguments);
+
+    if (q.isPromise(result)) {
+      result.done(function (obj) {
+        promise.resolve(obj);
+      }, function () {
+        promise.reject('Error initializing dependency');
+      });
+    } else {
+      promise.resolve(result);
+    }
   } catch (err) {
     promise.reject('Error initializing dependency');
   }
@@ -93,7 +99,13 @@ function inject (requestedDependency, stack) {
 
 module.exports.register = register;
 module.exports.inject = function (requestedDependency) {
-  return inject(requestedDependency, []);
+  if (arguments.length > 1) {
+    return q.all(_.map(arguments, function (arg) {
+      return inject(arg, []);
+    }));
+  } else {
+    return inject(requestedDependency, []);
+  }
 };
 
 module.exports.clean = function () {

@@ -15,9 +15,6 @@ module.exports = {
   dependentFunction: ['object', function (object) {
     return q({ name: 'dependentFunction', object: object });
   }],
-  noRegisterFunction: ['object', function (object) {
-    return q({ name: 'noRegisterFunction', object: object });
-  }],
   multiDependentFunction: ['object', 'function', function (object, func) {
     return q({ name: 'multiDependentFunction', object: object, func: func });
   }],
@@ -38,5 +35,11 @@ module.exports = {
   }],
   circularNestedStartFunction: ['circularEndFunction', function (circular) {
     return q({ name: 'circularNestedStartFunction '});
+  }],
+  noPromiseFunction: ['object', function (obj) {
+    return {
+      name: 'noPromiseFunction',
+      object: obj
+    };
   }]
 };

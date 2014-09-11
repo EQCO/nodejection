@@ -160,9 +160,24 @@ describe('nodejection', function () {
     });
 
     it('should handle onetime injections without registering the dependency', function (done) {
-      nodejection.inject(testData.noRegisterFunction).done(function (obj) {
-        obj.name.should.equal('noRegisterFunction');
+      nodejection.inject(testData.multiDependentFunction).done(function (obj) {
+        obj.name.should.equal('multiDependentFunction');
         obj.object.name.should.equal('object');
+        done();
+      });
+    });
+
+    it('should handle injections without promises', function (done) {
+      nodejection.inject(testData.noPromiseFunction).done(function (obj) {
+        obj.name.should.equal('noPromiseFunction');
+        done();
+      });
+    });
+
+    it('should handle multiple concurrent injections', function (done) {
+      nodejection.inject('object', 'function').spread(function (obj, obj2) {
+        obj.name.should.equal('object');
+        obj2.name.should.equal('function');
         done();
       });
     });

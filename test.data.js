@@ -33,7 +33,7 @@ var functions = {
   circularNestedEndFunction: ['circularNestedStartFunction', function (circular) {
     return q({ name: 'circularNestedEndFunction '});
   }],
-  circularNestedStartFunction: ['circularEndFunction', function (circular) {
+  circularNestedStartFunction: ['circularNestedEndFunction', function (circular) {
     return q({ name: 'circularNestedStartFunction '});
   }],
   noPromiseFunction: ['object', function (obj) {

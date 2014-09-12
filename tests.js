@@ -193,6 +193,12 @@ describe('nodejection', function () {
           done();
         });
       });
+
+      it('should handle no return values', function (done) {
+        nodejection.inject(testData.noReturnFunction).done(function () {
+          done();
+        });
+      });
     });
 
     describe('functionality', function () {

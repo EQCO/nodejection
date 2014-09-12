@@ -44,7 +44,8 @@ var functions = {
   }],
   parallelFunction: ['object', ['object', function(object) {}], function (object, mdf) {
     return {};
-  }]
+  }],
+  noReturnFunction: ['object', function (object) {}]
 };
 
 module.exports = functions;

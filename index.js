@@ -81,7 +81,8 @@ function inject (requestedDependency, stack) {
     });
   }
 
-  if (dependency.promise.isPending()) {
+  if (dependency.promise.isPending() && !(_.isBoolean(dependency.initializing) && dependency.initializing)) {
+    dependency.initializing = true;
     if (_.isPlainObject(dependency.definition)) { // Plain objects don't return promises, so just return as is.
       dependency.deferred.resolve(dependency.definition);
     } else if (_.isFunction(dependency.definition)) {

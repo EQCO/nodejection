@@ -127,19 +127,9 @@ function outerInject(requestedDependency) {
   var argsLength = arguments.length;
 
   if (argsLength > 1) {
-    var callback = _.last(arguments);
-
-    if (_.isFunction(callback)) { // Someone wanting to use callbacks instead
-      outerInject.apply(undefined, _.initial(arguments)).done(function () {
-        callback.bind(undefined, null).apply(undefined, argsLength === 2 ? [arguments[0]] : arguments[0]);
-      }, function (err) {
-        callback(err);
-      });
-    } else {
-      return q.all(_.map(arguments, function (arg) {
-        return inject(arg, []);
-      }));
-    }
+    return q.all(_.map(arguments, function (arg) {
+      return inject(arg, []);
+    }));
   } else {
     return inject(requestedDependency, []);
   }

@@ -140,14 +140,6 @@ describe('nodejection', function () {
         });
       });
 
-      it('should return a rejected promise on requesting invalid dependency when using callbacks', function (done) {
-        nodejection.inject('object2', function (err, obj) {
-          err.name.should.be.exactly('object2');
-          err.message.should.be.exactly('Requested dependency does not exist');
-          done();
-        });
-      });
-
       it('should handle errors', function (done) {
         nodejection.inject('errorFunction').fail(function (reason) {
           reason.name.should.be.exactly('errorFunction');
@@ -205,21 +197,6 @@ describe('nodejection', function () {
       it('should handle injection from root object', function (done) {
         nodejection('object').done(function (obj) {
           obj.name.should.equal('object');
-          done();
-        });
-      });
-
-      it('should be able to use callback instead for single injection', function (done) {
-        nodejection('object', function (err, obj) {
-          obj.name.should.equal('object');
-          done();
-        });
-      });
-
-      it('should be able to use callback instead for concurrent injections', function (done) {
-        nodejection('object', 'function', function (err, obj, obj2) {
-          obj.name.should.equal('object');
-          obj2.name.should.equal('function');
           done();
         });
       });

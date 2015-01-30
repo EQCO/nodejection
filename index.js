@@ -3,148 +3,158 @@ var _ = require('lodash'),
     q = require('q'),
     util = require('util');
 
-var dependencies = {};
+function nodejection() {
+  var dependencies = {};
 
-function register (dependencyName, dependencyPath) {
-  if (arguments.length == 2) { 
-    if (_.isString(dependencyPath)) { // Dependency is a file, need to require it.
-      dependencyPath = require(dependencyPath);
-    }
+  function register (dependencyName, dependencyPath) {
+    var that = this;
 
-    var deferred = q.defer();
+    if (arguments.length == 2) { 
+      if (_.isString(dependencyPath)) { // Dependency is a file, need to require it.
+        dependencyPath = require(dependencyPath);
+      }
 
-    dependencies[dependencyName] = {
-      definition: dependencyPath,
-      deferred: deferred,
-      promise: deferred.promise
-    };
-  } else if (arguments.length == 1 && _.isArray(arguments[0])) {
-    _.each(arguments[0], function (argument) {
-      register.apply(undefined, argument);
-    });
-  }
-}
+      var deferred = q.defer();
 
-function resolveFunctionDependency (name, dependencyFunction, promise, dependencyArguments) {
-  try {
-    var result = dependencyFunction.apply(undefined, dependencyArguments);
-
-    if (q.isPromise(result)) {
-      result.done(function (obj) {
-        promise.resolve(obj);
-      }, function (reason) {
-        promise.reject({
-          name: name,
-          message: 'Dependency returned a rejected promise',
-          reason: reason
-        });
+      dependencies[dependencyName] = {
+        definition: dependencyPath,
+        deferred: deferred,
+        promise: deferred.promise
+      };
+    } else if (arguments.length == 1 && _.isArray(arguments[0])) {
+      _.each(arguments[0], function (argument) {
+        that.register.apply(undefined, argument);
       });
-    } else {
-      promise.resolve(result);
     }
-  } catch (err) {
-    promise.reject({
-      name: name,
-      message: 'Unhandled error initializing dependency',
-      error: err
-    });
-  }
-}
-
-function inject (requestedDependency, stack) {
-  var dependency;
-
-  if (_.isString(requestedDependency)) {
-    dependency = dependencies[requestedDependency];
-
-     if (_.contains(stack, requestedDependency)) {
-      return q.reject({
-        name: requestedDependency,
-        message: 'Circular dependency detected'
-      });
-     }
-     stack.push(requestedDependency);
-  } else {
-    var deferred = q.defer();
-    dependency = {
-      definition: requestedDependency,
-      deferred: deferred,
-      promise: deferred.promise
-    };
-    requestedDependency = 'anonymous';
   }
 
-  if (_.isUndefined(dependency)) {
-    return q.reject({
-      name: requestedDependency,
-      message: 'Requested dependency does not exist'
-    });
-  }
+  function resolveFunctionDependency (name, dependencyFunction, promise, dependencyArguments) {
+    try {
+      var result = dependencyFunction.apply(undefined, dependencyArguments);
 
-  if (dependency.promise.isPending() && !(_.isBoolean(dependency.initializing) && dependency.initializing)) {
-    dependency.initializing = true;
-    if (_.isPlainObject(dependency.definition)) { // Plain objects don't return promises, so just return as is.
-      dependency.deferred.resolve(dependency.definition);
-    } else if (_.isFunction(dependency.definition)) {
-      resolveFunctionDependency(requestedDependency, dependency.definition, dependency.deferred);
-    } else if (_.isArray(dependency.definition)) {
-      if (dependency.definition.length == 1) {
-        if (_.isFunction(dependency.definition[0])) {
-          resolveFunctionDependency(requestedDependency, dependency.definition[0], dependency.deferred);
-        } else {
-          dependency.deferred.reject({
-            name: requestedDependency,
-            message: 'Unrecognized dependency'
-          });
-        }
-      } else {
-        var promises = _.map(_.initial(dependency.definition), function (dependencyName) {
-          return inject(dependencyName, _.clone(stack));
-        });
-
-        q.all(promises).done(function (dependencies) {
-          resolveFunctionDependency(requestedDependency, _.last(dependency.definition), dependency.deferred, dependencies);
+      if (q.isPromise(result)) {
+        result.done(function (obj) {
+          promise.resolve(obj);
         }, function (reason) {
-          dependency.deferred.reject({
-            name: requestedDependency,
-            message: 'Error initializing child dependency',
+          promise.reject({
+            name: name,
+            message: 'Dependency returned a rejected promise',
             reason: reason
           });
         });
+      } else {
+        promise.resolve(result);
       }
-    } else {
-      dependency.deferred.reject({
-        name: requestedDependency,
-        message: 'Unrecognized dependency'
+    } catch (err) {
+      promise.reject({
+        name: name,
+        message: 'Unhandled error initializing dependency',
+        error: err
       });
     }
   }
 
-  return dependency.promise;
-};
+  function innerInject (requestedDependency, stack) {
+    var dependency;
 
-function outerInject(requestedDependency) {
-  var argsLength = arguments.length;
+    if (_.isString(requestedDependency)) {
+      dependency = dependencies[requestedDependency];
 
-  if (argsLength > 1) {
-    return q.all(_.map(arguments, function (arg) {
-      return inject(arg, []);
-    }));
-  } else {
-    return inject(requestedDependency, []);
-  }
-};
+       if (_.contains(stack, requestedDependency)) {
+        return q.reject({
+          name: requestedDependency,
+          message: 'Circular dependency detected'
+        });
+       }
+       stack.push(requestedDependency);
+    } else {
+      var deferred = q.defer();
+      dependency = {
+        definition: requestedDependency,
+        deferred: deferred,
+        promise: deferred.promise
+      };
+      requestedDependency = 'anonymous';
+    }
 
-module.exports = outerInject;
-module.exports.register = register;
-module.exports.inject = outerInject;
+    if (_.isUndefined(dependency)) {
+      return q.reject({
+        name: requestedDependency,
+        message: 'Requested dependency does not exist'
+      });
+    }
 
-module.exports.clean = function () {
-  dependencies = {};
-};
+    if (dependency.promise.isPending() && !(_.isBoolean(dependency.initializing) && dependency.initializing)) {
+      dependency.initializing = true;
+      if (_.isPlainObject(dependency.definition)) { // Plain objects don't return promises, so just return as is.
+        dependency.deferred.resolve(dependency.definition);
+      } else if (_.isFunction(dependency.definition)) {
+        resolveFunctionDependency(requestedDependency, dependency.definition, dependency.deferred);
+      } else if (_.isArray(dependency.definition)) {
+        if (dependency.definition.length == 1) {
+          if (_.isFunction(dependency.definition[0])) {
+            resolveFunctionDependency(requestedDependency, dependency.definition[0], dependency.deferred);
+          } else {
+            dependency.deferred.reject({
+              name: requestedDependency,
+              message: 'Unrecognized dependency'
+            });
+          }
+        } else {
+          var promises = _.map(_.initial(dependency.definition), function (dependencyName) {
+            return innerInject(dependencyName, _.clone(stack));
+          });
 
-Object.defineProperty(module.exports, 'services', {
-  get: function () {
-    return _.keys(dependencies);
-  }
-});
+          q.all(promises).done(function (dependencies) {
+            resolveFunctionDependency(requestedDependency, _.last(dependency.definition), dependency.deferred, dependencies);
+          }, function (reason) {
+            dependency.deferred.reject({
+              name: requestedDependency,
+              message: 'Error initializing child dependency',
+              reason: reason
+            });
+          });
+        }
+      } else {
+        dependency.deferred.reject({
+          name: requestedDependency,
+          message: 'Unrecognized dependency'
+        });
+      }
+    }
+
+    return dependency.promise;
+  };
+
+  function inject (requestedDependency) {
+    var argsLength = arguments.length;
+
+    if (argsLength > 1) {
+      return q.all(_.map(arguments, function (arg) {
+        return innerInject(arg, []);
+      }));
+    } else {
+      return innerInject(requestedDependency, []);
+    }
+  };
+
+  function clean () {
+    dependencies = {};
+  };
+
+  var obj = inject;
+  obj.inject = inject;
+  obj.register = register;
+  obj.clean = clean;
+  obj.scope = nodejection;
+
+  Object.defineProperty(obj, 'services', {
+    get: function () {
+      return _.keys(dependencies);
+    }
+  });
+
+  return obj;
+}
+
+module.exports = nodejection();

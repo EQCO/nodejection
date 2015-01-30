@@ -61,6 +61,30 @@ describe('nodejection', function () {
     });
   });
 
+describe('scoped injection', function () {
+    beforeEach(function() {
+      nodejection.clean();
+    });
+
+    after(function () {
+      nodejection.clean();
+    });
+
+    it('should be able to create an instance that has different registered injections than the global copy', function () {
+      var nodejection2 = nodejection.scope();
+      nodejection.register('object', testData.object);
+
+      nodejection.services.length.should.be.exactly(1);
+      nodejection2.services.length.should.be.exactly(0);
+
+      nodejection2.register('object', testData.object);
+      nodejection2.register('path', './test.data.js');
+
+      nodejection.services.length.should.be.exactly(1);
+      nodejection2.services.length.should.be.exactly(2);
+    });
+  });
+
   describe('inject', function () {
     before(function () {
       nodejection.register([

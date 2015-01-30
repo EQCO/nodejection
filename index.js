@@ -86,9 +86,7 @@ function nodejection() {
 
     if (dependency.promise.isPending() && !(_.isBoolean(dependency.initializing) && dependency.initializing)) {
       dependency.initializing = true;
-      if (_.isPlainObject(dependency.definition)) { // Plain objects don't return promises, so just return as is.
-        dependency.deferred.resolve(dependency.definition);
-      } else if (_.isFunction(dependency.definition)) {
+      if (_.isFunction(dependency.definition)) {
         resolveFunctionDependency(requestedDependency, dependency.definition, dependency.deferred);
       } else if (_.isArray(dependency.definition)) {
         if (dependency.definition.length == 1) {
@@ -116,10 +114,7 @@ function nodejection() {
           });
         }
       } else {
-        dependency.deferred.reject({
-          name: requestedDependency,
-          message: 'Unrecognized dependency'
-        });
+        dependency.deferred.resolve(dependency.definition);
       }
     }
 

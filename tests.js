@@ -157,7 +157,7 @@ describe('scoped injection', function () {
 
     describe('error handling', function () {
       it('should return a rejected promise on requesting invalid dependency', function (done) {
-        nodejection.inject('object2').fail(function(reason) {
+        nodejection.inject('object2').catch(function(reason) {
           reason.name.should.be.exactly('object2');
           reason.message.should.be.exactly('Requested dependency does not exist');
           done();
@@ -165,7 +165,7 @@ describe('scoped injection', function () {
       });
 
       it('should handle errors', function (done) {
-        nodejection.inject('errorFunction').fail(function (reason) {
+        nodejection.inject('errorFunction').catch(function (reason) {
           reason.name.should.be.exactly('errorFunction');
           reason.message.should.be.exactly('Unhandled error initializing dependency');
           reason.error.should.be.an.Object;
@@ -174,7 +174,7 @@ describe('scoped injection', function () {
       });
 
       it('should handle nested errors', function (done) {
-        nodejection.inject('nestedErrorFunction').fail(function (reason) {
+        nodejection.inject('nestedErrorFunction').catch(function (reason) {
           reason.name.should.be.exactly('nestedErrorFunction');
           reason.message.should.be.exactly('Error initializing child dependency');
           reason.reason.name.should.be.exactly('errorFunction');
@@ -185,7 +185,7 @@ describe('scoped injection', function () {
       });
 
       it('should handle circular dependencies', function (done) {
-        nodejection.inject('circularFunction').fail(function (reason) {
+        nodejection.inject('circularFunction').catch(function (reason) {
           reason.name.should.be.exactly('circularFunction');
           reason.reason.message.should.be.exactly('Circular dependency detected');
           done();
@@ -193,7 +193,7 @@ describe('scoped injection', function () {
       });
 
       it('should handle nested circular dependencies', function (done) {
-        nodejection.inject('circularNestedStartFunction').fail(function (reason) {
+        nodejection.inject('circularNestedStartFunction').catch(function (reason) {
           reason.name.should.be.exactly('circularNestedStartFunction');
           reason.message.should.be.exactly('Error initializing child dependency');
           reason.reason.reason.name.should.be.exactly('circularNestedStartFunction');

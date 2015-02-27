@@ -1,5 +1,5 @@
 'use strict';
-var q = require('q');
+var Promise = require('bluebird');
 
 var functions = {
   object: {
@@ -7,34 +7,34 @@ var functions = {
   },
 
   function: function () {
-    return q({ name: 'function' });
+    return Promise.resolve({ name: 'function' });
   },
   arrayedFunction: [function () {
-    return q({ name: 'arrayedFunction' });
+    return Promise.resolve({ name: 'arrayedFunction' });
   }],
   dependentFunction: ['object', function (object) {
-    return q({ name: 'dependentFunction', object: object });
+    return Promise.resolve({ name: 'dependentFunction', object: object });
   }],
   multiDependentFunction: ['object', 'function', function (object, func) {
-    return q({ name: 'multiDependentFunction', object: object, func: func });
+    return Promise.resolve({ name: 'multiDependentFunction', object: object, func: func });
   }],
   nestedDependentFunction: ['dependentFunction', function (dependentFunction) {
-    return q({ name: 'nestedDependentFunction', dependentFunction: dependentFunction });
+    return Promise.resolve({ name: 'nestedDependentFunction', dependentFunction: dependentFunction });
   }],
   errorFunction: function() {
     throw new Error();
   },
   nestedErrorFunction: ['errorFunction', function (error) {
-    return q({ name: 'nestedErrorFunction '});
+    return Promise.resolve({ name: 'nestedErrorFunction '});
   }],
   circularFunction: ['circularFunction', function (circular) {
-    return q({ name: 'circularFunction '});
+    return Promise.resolve({ name: 'circularFunction '});
   }],
   circularNestedEndFunction: ['circularNestedStartFunction', function (circular) {
-    return q({ name: 'circularNestedEndFunction '});
+    return Promise.resolve({ name: 'circularNestedEndFunction '});
   }],
   circularNestedStartFunction: ['circularNestedEndFunction', function (circular) {
-    return q({ name: 'circularNestedStartFunction '});
+    return Promise.resolve({ name: 'circularNestedStartFunction '});
   }],
   noPromiseFunction: ['object', function (obj) {
     return {

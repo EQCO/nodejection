@@ -1,7 +1,20 @@
 'use strict';
 var _ = require('lodash'),
-    q = require('q'),
+    Promise = require('bluebird'),
     util = require('util');
+
+function defer() {
+    var resolve, reject;
+    var promise = new Promise(function() {
+        resolve = arguments[0];
+        reject = arguments[1];
+    });
+    return {
+        resolve: resolve,
+        reject: reject,
+        promise: promise
+    };
+}
 
 function nodejection() {
   var dependencies = {};
@@ -14,7 +27,7 @@ function nodejection() {
         dependencyPath = require(dependencyPath);
       }
 
-      var deferred = q.defer();
+      var deferred = defer();
 
       dependencies[dependencyName] = {
         definition: dependencyPath,
@@ -32,7 +45,7 @@ function nodejection() {
     try {
       var result = dependencyFunction.apply(undefined, dependencyArguments);
 
-      if (q.isPromise(result)) {
+      if (result instanceof Promise) {
         result.done(function (obj) {
           promise.resolve(obj);
         }, function (reason) {
@@ -61,14 +74,14 @@ function nodejection() {
       dependency = dependencies[requestedDependency];
 
        if (_.contains(stack, requestedDependency)) {
-        return q.reject({
+        return Promise.reject({
           name: requestedDependency,
           message: 'Circular dependency detected'
         });
        }
        stack.push(requestedDependency);
     } else {
-      var deferred = q.defer();
+      var deferred = defer();
       dependency = {
         definition: requestedDependency,
         deferred: deferred,
@@ -78,7 +91,7 @@ function nodejection() {
     }
 
     if (_.isUndefined(dependency)) {
-      return q.reject({
+      return Promise.reject({
         name: requestedDependency,
         message: 'Requested dependency does not exist'
       });
@@ -103,7 +116,7 @@ function nodejection() {
             return innerInject(dependencyName, _.clone(stack));
           });
 
-          q.all(promises).done(function (dependencies) {
+          Promise.all(promises).done(function (dependencies) {
             resolveFunctionDependency(requestedDependency, _.last(dependency.definition), dependency.deferred, dependencies);
           }, function (reason) {
             dependency.deferred.reject({
@@ -125,7 +138,7 @@ function nodejection() {
     var argsLength = arguments.length;
 
     if (argsLength > 1) {
-      return q.all(_.map(arguments, function (arg) {
+      return Promise.all(_.map(arguments, function (arg) {
         return innerInject(arg, []);
       }));
     } else {

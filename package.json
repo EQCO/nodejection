@@ -10,7 +10,7 @@
     "type": "git",
     "url": "https://github.com/EQCO/nodejection.git"
   },
-  "author": "",
+  "author": "josh@eqco.co",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/EQCO/nodejection/issues"
@@ -21,7 +21,7 @@
     "lodash": "^2.4.1"
   },
   "devDependencies": {
-    "chai": "^2.2.0",
-    "mocha": "^1.21.4"
+    "chai": "*",
+    "mocha": "*"
   }
 }

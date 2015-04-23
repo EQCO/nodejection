@@ -1,6 +1,6 @@
 {
   "name": "nodejection",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "angular-style node dependency injection",
   "main": "index.js",
   "scripts": {

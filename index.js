@@ -46,7 +46,7 @@ function nodejection() {
       var result = dependencyFunction.apply(undefined, dependencyArguments);
 
       if (result instanceof Promise) {
-        result.done(function (obj) {
+        result.then(function (obj) {
           promise.resolve(obj);
         }, function (reason) {
           promise.reject({
@@ -116,7 +116,7 @@ function nodejection() {
             return innerInject(dependencyName, _.clone(stack));
           });
 
-          Promise.all(promises).done(function (dependencies) {
+          Promise.all(promises).then(function (dependencies) {
             resolveFunctionDependency(requestedDependency, _.last(dependency.definition), dependency.deferred, dependencies);
           }, function (reason) {
             dependency.deferred.reject({
@@ -155,6 +155,7 @@ function nodejection() {
   obj.register = register;
   obj.clean = clean;
   obj.scope = nodejection;
+  obj.Literal = function (obj) { return function () { return obj; } };
 
   Object.defineProperty(obj, 'services', {
     get: function () {

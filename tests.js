@@ -1,5 +1,5 @@
 'use strict';
-var should = require('should'),
+var should = require('chai').should(),
     testData = require('./test.data.js');
 
 describe('nodejection', function () {
@@ -12,9 +12,9 @@ describe('nodejection', function () {
   it('should have a working clean function', function () {
     nodejection.register('object', testData.object);
 
-    nodejection.services.length.should.be.exactly(1);
+    nodejection.services.length.should.equal(1);
     nodejection.clean();
-    nodejection.services.length.should.be.exactly(0);
+    nodejection.services.length.should.equal(0);
   });
 
   describe('register', function () {
@@ -29,21 +29,39 @@ describe('nodejection', function () {
     it('should accept a plain object as a dependency', function () {
       nodejection.register('object', testData.object);
 
-      nodejection.services.length.should.be.exactly(1);
+      nodejection.services.length.should.equal(1);
       nodejection.services[0].should.equal('object');
+    });
+
+    it('should accept a function object as a dependency', function () {
+      var test = function () {};
+      test.foo = 'abc';
+
+      nodejection.register('function', nodejection.Literal(test));
+
+      nodejection.services.length.should.equal(1);
+      nodejection.services[0].should.equal('function');
+
+      return nodejection.inject('function')
+      .then(function (test) {
+        should.exist(test);
+        test.should.be.a.function;
+        should.exist(test.foo);
+        test.foo.should.equal('abc');
+      });
     });
 
     it('should accept a path dependency', function () {
       nodejection.register('path', './test.data.js');
 
-      nodejection.services.length.should.be.exactly(1);
+      nodejection.services.length.should.equal(1);
       nodejection.services[0].should.equal('path');
     });
 
     it('should accept a function as a dependency', function () {
       nodejection.register('function', testData.function);
 
-      nodejection.services.length.should.be.exactly(1);
+      nodejection.services.length.should.equal(1);
       nodejection.services[0].should.equal('function');
     });
 
@@ -54,7 +72,7 @@ describe('nodejection', function () {
         ['function', testData.function]
       ]);
 
-      nodejection.services.length.should.be.exactly(3);
+      nodejection.services.length.should.equal(3);
       nodejection.services[0].should.equal('object');
       nodejection.services[1].should.equal('path');
       nodejection.services[2].should.equal('function');
@@ -74,14 +92,14 @@ describe('scoped injection', function () {
       var nodejection2 = nodejection.scope();
       nodejection.register('object', testData.object);
 
-      nodejection.services.length.should.be.exactly(1);
-      nodejection2.services.length.should.be.exactly(0);
+      nodejection.services.length.should.equal(1);
+      nodejection2.services.length.should.equal(0);
 
       nodejection2.register('object', testData.object);
       nodejection2.register('path', './test.data.js');
 
-      nodejection.services.length.should.be.exactly(1);
-      nodejection2.services.length.should.be.exactly(2);
+      nodejection.services.length.should.equal(1);
+      nodejection2.services.length.should.equal(2);
     });
   });
 
@@ -158,16 +176,16 @@ describe('scoped injection', function () {
     describe('error handling', function () {
       it('should return a rejected promise on requesting invalid dependency', function (done) {
         nodejection.inject('object2').catch(function(reason) {
-          reason.name.should.be.exactly('object2');
-          reason.message.should.be.exactly('Requested dependency does not exist');
+          reason.name.should.equal('object2');
+          reason.message.should.equal('Requested dependency does not exist');
           done();
         });
       });
 
       it('should handle errors', function (done) {
         nodejection.inject('errorFunction').catch(function (reason) {
-          reason.name.should.be.exactly('errorFunction');
-          reason.message.should.be.exactly('Unhandled error initializing dependency');
+          reason.name.should.equal('errorFunction');
+          reason.message.should.equal('Unhandled error initializing dependency');
           reason.error.should.be.an.Object;
           done();
         });
@@ -175,10 +193,10 @@ describe('scoped injection', function () {
 
       it('should handle nested errors', function (done) {
         nodejection.inject('nestedErrorFunction').catch(function (reason) {
-          reason.name.should.be.exactly('nestedErrorFunction');
-          reason.message.should.be.exactly('Error initializing child dependency');
-          reason.reason.name.should.be.exactly('errorFunction');
-          reason.reason.message.should.be.exactly('Unhandled error initializing dependency');
+          reason.name.should.equal('nestedErrorFunction');
+          reason.message.should.equal('Error initializing child dependency');
+          reason.reason.name.should.equal('errorFunction');
+          reason.reason.message.should.equal('Unhandled error initializing dependency');
           reason.reason.error.should.be.an.Object;
           done();
         });
@@ -186,18 +204,18 @@ describe('scoped injection', function () {
 
       it('should handle circular dependencies', function (done) {
         nodejection.inject('circularFunction').catch(function (reason) {
-          reason.name.should.be.exactly('circularFunction');
-          reason.reason.message.should.be.exactly('Circular dependency detected');
+          reason.name.should.equal('circularFunction');
+          reason.reason.message.should.equal('Circular dependency detected');
           done();
         });
       });
 
       it('should handle nested circular dependencies', function (done) {
         nodejection.inject('circularNestedStartFunction').catch(function (reason) {
-          reason.name.should.be.exactly('circularNestedStartFunction');
-          reason.message.should.be.exactly('Error initializing child dependency');
-          reason.reason.reason.name.should.be.exactly('circularNestedStartFunction');
-          reason.reason.reason.message.should.be.exactly('Circular dependency detected');
+          reason.name.should.equal('circularNestedStartFunction');
+          reason.message.should.equal('Error initializing child dependency');
+          reason.reason.reason.name.should.equal('circularNestedStartFunction');
+          reason.reason.reason.message.should.equal('Circular dependency detected');
           done();
         });
       });

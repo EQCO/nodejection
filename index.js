@@ -1,7 +1,8 @@
 'use strict';
 var _ = require('lodash'),
     Promise = require('bluebird'),
-    util = require('util');
+    util = require('util'),
+    errors = require('./errors');
 
 function defer() {
   var resolve, reject;
@@ -49,21 +50,13 @@ function nodejection() {
         result.then(function (obj) {
           promise.resolve(obj);
         }, function (reason) {
-          promise.reject({
-            name: name,
-            message: 'Dependency returned a rejected promise',
-            reason: reason
-          });
+          promise.reject(new errors.RejectedDependencyPromiseError(name, reason));
         });
       } else {
         promise.resolve(result);
       }
     } catch (err) {
-      promise.reject({
-        name: name,
-        message: 'Unhandled error initializing dependency',
-        error: err
-      });
+      promise.reject(new errors.UnhandledDependencyError(name, err));
     }
   }
 
@@ -74,10 +67,7 @@ function nodejection() {
       dependency = dependencies[requestedDependency];
 
        if (_.contains(stack, requestedDependency)) {
-        return Promise.reject({
-          name: requestedDependency,
-          message: 'Circular dependency detected'
-        });
+        return Promise.reject(new errors.CircularDependencyError(requestedDependency));
        }
        stack.push(requestedDependency);
     } else {
@@ -91,10 +81,7 @@ function nodejection() {
     }
 
     if (_.isUndefined(dependency)) {
-      return Promise.reject({
-        name: requestedDependency,
-        message: 'Requested dependency does not exist'
-      });
+      return Promise.reject(new errors.UnknownDependencyError(requestedDependency));
     }
 
     if (dependency.promise.isPending() && !(_.isBoolean(dependency.initializing) && dependency.initializing)) {
@@ -106,10 +93,7 @@ function nodejection() {
           if (_.isFunction(dependency.definition[0])) {
             resolveFunctionDependency(requestedDependency, dependency.definition[0], dependency.deferred);
           } else {
-            dependency.deferred.reject({
-              name: requestedDependency,
-              message: 'Unrecognized dependency'
-            });
+            dependency.deferred.reject(new errors.UnknownDependencyError(requestedDependency));
           }
         } else {
           var promises = _.map(_.initial(dependency.definition), function (dependencyName) {
@@ -119,11 +103,7 @@ function nodejection() {
           Promise.all(promises).then(function (dependencies) {
             resolveFunctionDependency(requestedDependency, _.last(dependency.definition), dependency.deferred, dependencies);
           }, function (reason) {
-            dependency.deferred.reject({
-              name: requestedDependency,
-              message: 'Error initializing child dependency',
-              reason: reason
-            });
+            dependency.deferred.reject(new errors.ChildDependencyError(requestedDependency, reason));
           });
         }
       } else {
@@ -156,6 +136,8 @@ function nodejection() {
   obj.clean = clean;
   obj.scope = nodejection;
   obj.Literal = function (obj) { return function () { return obj; } };
+  obj.literal = obj.Literal;
+  obj.errors = errors;
 
   Object.defineProperty(obj, 'services', {
     get: function () {

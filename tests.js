@@ -176,7 +176,7 @@ describe('scoped injection', function () {
     describe('error handling', function () {
       it('should return a rejected promise on requesting invalid dependency', function (done) {
         nodejection.inject('object2').catch(function(reason) {
-          reason.name.should.equal('object2');
+          reason.dependencyName.should.equal('object2');
           reason.message.should.equal('Requested dependency does not exist');
           done();
         });
@@ -184,27 +184,29 @@ describe('scoped injection', function () {
 
       it('should handle errors', function (done) {
         nodejection.inject('errorFunction').catch(function (reason) {
-          reason.name.should.equal('errorFunction');
+          reason.dependencyName.should.equal('errorFunction');
           reason.message.should.equal('Unhandled error initializing dependency');
-          reason.error.should.be.an.Object;
+          reason.dependencyError.should.be.an.Object;
           done();
         });
       });
 
       it('should handle nested errors', function (done) {
         nodejection.inject('nestedErrorFunction').catch(function (reason) {
-          reason.name.should.equal('nestedErrorFunction');
+          reason.name.should.equal('ChildDependencyError');
+          reason.dependencyName.should.equal('nestedErrorFunction');
           reason.message.should.equal('Error initializing child dependency');
-          reason.reason.name.should.equal('errorFunction');
+          reason.reason.dependencyName.should.equal('errorFunction');
           reason.reason.message.should.equal('Unhandled error initializing dependency');
-          reason.reason.error.should.be.an.Object;
+          reason.reason.dependencyError.should.be.an.Object;
+          reason.causingError.should.equal(reason.reason.dependencyError);
           done();
         });
       });
 
       it('should handle circular dependencies', function (done) {
         nodejection.inject('circularFunction').catch(function (reason) {
-          reason.name.should.equal('circularFunction');
+          reason.dependencyName.should.equal('circularFunction');
           reason.reason.message.should.equal('Circular dependency detected');
           done();
         });
@@ -212,10 +214,11 @@ describe('scoped injection', function () {
 
       it('should handle nested circular dependencies', function (done) {
         nodejection.inject('circularNestedStartFunction').catch(function (reason) {
-          reason.name.should.equal('circularNestedStartFunction');
+          reason.dependencyName.should.equal('circularNestedStartFunction');
           reason.message.should.equal('Error initializing child dependency');
-          reason.reason.reason.name.should.equal('circularNestedStartFunction');
+          reason.reason.reason.dependencyName.should.equal('circularNestedStartFunction');
           reason.reason.reason.message.should.equal('Circular dependency detected');
+          reason.causingMessage.should.equal('Circular dependency detected');
           done();
         });
       });

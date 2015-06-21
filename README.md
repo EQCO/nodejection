@@ -1,4 +1,4 @@
-+![NPM Version](https://img.shields.io/npm/v/nodejection.svg)
+![NPM Version](https://img.shields.io/npm/v/nodejection.svg)
 
 nodejection
 ===========
